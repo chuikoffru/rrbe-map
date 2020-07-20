@@ -16,7 +16,7 @@ import "./style.scss";
 
 function App() {
   const box = useRef(null);
-  const [zoom, setZoom] = useState(10);
+  const [zoom, setZoom] = useState(6);
   const [center, setCenter] = useState([54.57299842212406, 56.20845794677735]);
   const [selected, setSelected] = useState(null);
   const [state, dispatch] = useReducer(reducer, initialState);
