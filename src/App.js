@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState, useReducer } from "react";
 import L from "leaflet";
 
-import { Map, Pane, FeatureGroup, TileLayer, useLeaflet, Marker } from "react-leaflet";
+import { Map, Pane, FeatureGroup, TileLayer, Marker, Popup } from "react-leaflet";
 import { EditControl } from "react-leaflet-draw";
 
 import { initialState, reducer } from "./store/reducer";
@@ -16,16 +16,18 @@ import "./style.scss";
 
 function App() {
   const box = useRef(null);
-  const leaflet = useLeaflet();
   const [zoom, setZoom] = useState(10);
   const [center, setCenter] = useState([54.57299842212406, 56.20845794677735]);
   const [selected, setSelected] = useState(null);
   const [state, dispatch] = useReducer(reducer, initialState);
 
-  const createLayer = ({ layer, layerType }) => {
-    console.log("layer", layer);
+  const createLayer = ({ layer }) => {
     let feature = (layer.feature = layer.feature || {});
-    feature.type = feature.type || "Feature";
+    feature.type = "Feature";
+    feature.properties = feature.properties || {};
+    feature.properties.icon = "marker";
+    feature.properties.popup = "Hello!";
+    console.log("layer", layer);
     dispatch(addFeature(layer.toGeoJSON()));
   };
 
@@ -56,10 +58,8 @@ function App() {
   }, [state]);
 
   const whenReady = () => {
-    //console.log("box.current", box.current);
     let leafletGeoJSON = new L.GeoJSON(state);
-    console.log("whenReady", leafletGeoJSON);
-    //leafletGeoJSON.eachLayer((layer) => ref.leafletElement.addLayer(layer));
+    console.log("whenReady", leafletGeoJSON.toGeoJSON());
   };
 
   const renderIcon = (name) => {
@@ -77,10 +77,12 @@ function App() {
         return (
           <Marker
             key={key}
-            onclick={() => setSelected(geometry)}
+            onclick={() => setSelected(key)}
             position={geometry.coordinates}
-            icon={renderIcon("marker")}
-          />
+            icon={renderIcon(properties.icon)}
+          >
+            <Popup>{properties.popup}</Popup>
+          </Marker>
         );
       default:
         break;
@@ -90,7 +92,6 @@ function App() {
   return (
     <div className="rrbe-map">
       <Map
-        crs={L.CRS.EPSG3395}
         center={center}
         zoom={zoom}
         className="rrbe-map__container"
@@ -104,6 +105,9 @@ function App() {
         <TileLayer
           url="http://vec{s}.maps.yandex.net/tiles?l=map&v=4.55.2&z={z}&x={x}&y={y}&scale=2&lang=ru_RU"
           subdomains={["01", "02", "03", "04"]}
+          attribution={'<a http="yandex.ru" target="_blank">Яндекс</a>'}
+          reuseTiles={true}
+          updateWhenIdle={false}
         />
         <FeatureGroup ref={box}>
           <EditControl
