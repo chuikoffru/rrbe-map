@@ -27,19 +27,19 @@ function App() {
     feature.properties = feature.properties || {};
     feature.properties.icon = "marker";
     feature.properties.popup = "Hello!";
-    console.log("layer", layer);
-    dispatch(addFeature(layer.toGeoJSON()));
+    dispatch(addFeature(layer.toGeoJSON(14)));
   };
 
   const updateLayer = ({ layers }) => {
-    layers.eachLayer((layer) => {
-      console.log("layer", layer.toGeoJSON());
+    console.log("layer", layers.toGeoJSON(14));
+    /* layers.eachLayer((layer) => {
+      console.log("layer", layer.toGeoJSON(14));
       //dispatch(updateFeature(layer));
-    });
+    }); */
   };
 
   const deleteLayer = ({ layers }) => {
-    console.log("layer", layers.toGeoJSON());
+    console.log("layer", layers.toGeoJSON(14));
   };
 
   const handleMove = (e) => {
@@ -57,11 +57,6 @@ function App() {
     }
   }, [state]);
 
-  const whenReady = () => {
-    let leafletGeoJSON = new L.GeoJSON(state);
-    console.log("whenReady", leafletGeoJSON.toGeoJSON());
-  };
-
   const renderIcon = (name) => {
     switch (name) {
       case "marker":
@@ -72,13 +67,15 @@ function App() {
   };
 
   const renderObject = ({ id, key, type, properties, geometry }) => {
+    const { coordinates } = geometry;
+    const position = new L.LatLng(coordinates[1], coordinates[0]);
     switch (geometry.type) {
       case "Point":
         return (
           <Marker
             key={key}
             onclick={() => setSelected(key)}
-            position={geometry.coordinates}
+            position={position}
             icon={renderIcon(properties.icon)}
           >
             <Popup>{properties.popup}</Popup>
@@ -94,22 +91,14 @@ function App() {
       <Map
         center={center}
         zoom={zoom}
-        crs={L.CRS.EPSG3395}
         className="rrbe-map__container"
         style={{
           height: window.innerHeight,
         }}
         onmoveend={handleMove}
         onzoomend={handleZoom}
-        whenReady={whenReady}
       >
-        <TileLayer
-          url="http://vec{s}.maps.yandex.net/tiles?l=map&v=4.55.2&z={z}&x={x}&y={y}&scale=2&lang=ru_RU"
-          subdomains={["01", "02", "03", "04"]}
-          attribution={'<a http="yandex.ru" target="_blank">Яндекс</a>'}
-          reuseTiles={true}
-          updateWhenIdle={false}
-        />
+        <TileLayer url="http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         <FeatureGroup ref={box}>
           <EditControl
             position="topleft"
