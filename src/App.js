@@ -5,7 +5,7 @@ import { Map, Pane, FeatureGroup, TileLayer, Marker, Popup } from "react-leaflet
 import { EditControl } from "react-leaflet-draw";
 
 import { initialState, reducer } from "./store/reducer";
-import { addFeature } from "./store/actions";
+import { addFeature, updateFeature, deleteFeature } from "./store/actions";
 
 import Debug from "./Debug";
 import MarkerIcon from "./assets/marker.svg";
@@ -22,24 +22,27 @@ function App() {
   const [state, dispatch] = useReducer(reducer, initialState);
 
   const createLayer = ({ layer }) => {
-    let feature = (layer.feature = layer.feature || {});
-    feature.type = "Feature";
-    feature.properties = feature.properties || {};
-    feature.properties.icon = "marker";
-    feature.properties.popup = "Hello!";
-    dispatch(addFeature(layer.toGeoJSON(14)));
+    let geojson = layer.toGeoJSON(14);
+    geojson.id = layer._leaflet_id;
+    geojson.properties.icon = "marker";
+    geojson.properties.popup = "Hello!";
+    dispatch(addFeature(geojson));
   };
 
   const updateLayer = ({ layers }) => {
-    console.log("layer", layers.toGeoJSON(14));
-    /* layers.eachLayer((layer) => {
-      console.log("layer", layer.toGeoJSON(14));
-      //dispatch(updateFeature(layer));
-    }); */
+    layers.eachLayer((layer) => {
+      let geojson = layer.toGeoJSON(14);
+      geojson.id = layer.options.id;
+      geojson.properties.icon = layer.options.iconName;
+      geojson.properties.popup = layer.options.popup;
+      dispatch(updateFeature(geojson));
+    });
   };
 
   const deleteLayer = ({ layers }) => {
-    console.log("layer", layers.toGeoJSON(14));
+    layers.eachLayer((layer) => {
+      dispatch(deleteFeature(layer.options.id));
+    });
   };
 
   const handleMove = (e) => {
@@ -62,7 +65,7 @@ function App() {
       case "marker":
         return new L.Icon({ iconUrl: MarkerIcon, iconSize: [36, 36] });
       default:
-        return <MarkerIcon />;
+        return new L.Icon({ iconUrl: MarkerIcon, iconSize: [36, 36] });
     }
   };
 
@@ -73,12 +76,15 @@ function App() {
       case "Point":
         return (
           <Marker
-            key={key}
+            key={id}
+            id={id}
             onclick={() => setSelected(key)}
             position={position}
+            iconName={properties.icon}
+            popup={properties.popup}
             icon={renderIcon(properties.icon)}
           >
-            <Popup>{properties.popup}</Popup>
+            {properties.popup && <Popup>{properties.popup}</Popup>}
           </Marker>
         );
       default:
@@ -103,19 +109,13 @@ function App() {
           <EditControl
             position="topleft"
             onCreated={createLayer}
-            onUpdated={updateLayer}
+            onEdited={updateLayer}
             onDeleted={deleteLayer}
           />
           {state.features.map((item, key) => renderObject({ ...item, key }))}
         </FeatureGroup>
         <Pane>
-          <Debug
-            dispatch={dispatch}
-            state={state}
-            center={center}
-            zoom={zoom}
-            selected={selected}
-          />
+          <Debug state={state} center={center} zoom={zoom} selected={selected} />
         </Pane>
       </Map>
     </div>
