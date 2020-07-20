@@ -1,0 +1,5 @@
+export const ADD_GEOJSON = "GEOJSON/ADD";
+export const DELETE_GEOJSON = "GEOJSON/DELETE";
+export const UPDATE_GEOJSON = "GEOJSON/UPDATE";
+export const SELECT_GEOJSON = "GEOJSON/SELECT";
+export const CLEAR_ALL = "ALL/CLEAR";
