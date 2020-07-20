@@ -12,7 +12,7 @@ const Debug = ({ center, zoom, selected, state, dispatch }) => {
       </button>
       <pre>
         {JSON.stringify(center)} {zoom} <br />
-        {selected} <br />
+        {JSON.stringify(selected)} <br />
         {JSON.stringify(state, null, 2)}
       </pre>
     </div>
