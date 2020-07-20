@@ -94,6 +94,7 @@ function App() {
       <Map
         center={center}
         zoom={zoom}
+        crs={L.CRS.EPSG3395}
         className="rrbe-map__container"
         style={{
           height: window.innerHeight,
