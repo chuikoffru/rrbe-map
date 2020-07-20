@@ -43,9 +43,7 @@ function App() {
 
   const updateLayer = ({ layers }) => {
     layers.eachLayer((layer) => {
-      if (layer.options.id) {
-      }
-      console.log("layer", layers.toGeoJSON());
+      console.log("layer", layer.toGeoJSON());
       //dispatch(updateFeature(layer));
     });
   };
