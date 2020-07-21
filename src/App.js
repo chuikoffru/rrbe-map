@@ -1,14 +1,20 @@
-import React, { useRef, useEffect, useState, useReducer } from "react";
+import React, { useEffect, useState, useReducer, useRef } from "react";
 import L from "leaflet";
 
-import { Map, Pane, FeatureGroup, TileLayer, Marker, Popup } from "react-leaflet";
+import { Map, FeatureGroup, TileLayer, Marker, Popup, Circle, Polygon } from "react-leaflet";
 import { EditControl } from "react-leaflet-draw";
+import Control from "react-leaflet-control";
 
 import { initialState, reducer } from "./store/reducer";
 import { addFeature, updateFeature, deleteFeature } from "./store/actions";
+import { cleanOptions } from "./helpers/cleanOptions";
+import { getPositions } from "./helpers/getPositions";
 
 import Debug from "./Debug";
+import ModalControl from "./ModalControl";
+
 import MarkerIcon from "./assets/marker.svg";
+import PaintIcon from "./assets/paint.svg";
 
 import "leaflet/dist/leaflet.css";
 import "leaflet-draw/dist/leaflet.draw.css";
@@ -16,25 +22,45 @@ import "./style.scss";
 
 function App() {
   const box = useRef(null);
-  const [zoom, setZoom] = useState(6);
+  const [zoom, setZoom] = useState(11);
   const [center, setCenter] = useState([54.57299842212406, 56.20845794677735]);
   const [selected, setSelected] = useState(null);
   const [state, dispatch] = useReducer(reducer, initialState);
+  const [open, setOpen] = useState(false);
 
   const createLayer = ({ layer }) => {
     let geojson = layer.toGeoJSON(14);
+    // Назначаем ID
     geojson.id = layer._leaflet_id;
-    geojson.properties.icon = "marker";
-    geojson.properties.popup = "Hello!";
-    dispatch(addFeature(geojson));
+    geojson.properties = cleanOptions(layer.options);
+
+    // Свойства для маркера
+    if (layer instanceof L.Marker) {
+      geojson.properties.iconName = "marker";
+    }
+
+    if (layer instanceof L.Polygon) {
+      geojson.properties.positions = getPositions(layer);
+    }
+
+    setSelected(geojson.id);
+
+    return dispatch(addFeature(geojson));
   };
 
   const updateLayer = ({ layers }) => {
     layers.eachLayer((layer) => {
       let geojson = layer.toGeoJSON(14);
       geojson.id = layer.options.id;
-      geojson.properties.icon = layer.options.iconName;
-      geojson.properties.popup = layer.options.popup;
+      geojson.properties = cleanOptions(layer.options);
+
+      if (layer instanceof L.Circle) {
+        geojson.properties.radius = layer.getRadius();
+      }
+
+      if (layer instanceof L.Polygon) {
+        geojson.properties.positions = getPositions(layer);
+      }
       dispatch(updateFeature(geojson));
     });
   };
@@ -43,6 +69,7 @@ function App() {
     layers.eachLayer((layer) => {
       dispatch(deleteFeature(layer.options.id));
     });
+    setSelected(null);
   };
 
   const handleMove = (e) => {
@@ -69,26 +96,52 @@ function App() {
     }
   };
 
-  const renderObject = ({ id, key, type, properties, geometry }) => {
-    const { coordinates } = geometry;
-    const position = new L.LatLng(coordinates[1], coordinates[0]);
-    switch (geometry.type) {
+  const renderObject = ({ id, properties, geometry }) => {
+    const { coordinates, type } = geometry;
+    switch (type) {
       case "Point":
+        const position = new L.LatLng(coordinates[1], coordinates[0]);
+        if (properties.radius) {
+          return (
+            <Circle
+              key={id}
+              id={id}
+              popup={properties.popup}
+              radius={properties.radius}
+              color={properties.color}
+              center={position}
+              onclick={() => setSelected(id)}
+            >
+              {properties.popup && <Popup>{properties.popup}</Popup>}
+            </Circle>
+          );
+        } else {
+          return (
+            <Marker
+              key={id}
+              id={id}
+              position={position}
+              onclick={() => setSelected(id)}
+              popup={properties.popup}
+              iconName={properties.icon}
+              icon={renderIcon(properties.iconName)}
+            >
+              {properties.popup && <Popup>{properties.popup}</Popup>}
+            </Marker>
+          );
+        }
+      case "Polygon":
         return (
-          <Marker
+          <Polygon
             key={id}
             id={id}
-            onclick={() => setSelected(key)}
-            position={position}
-            iconName={properties.icon}
-            popup={properties.popup}
-            icon={renderIcon(properties.icon)}
-          >
-            {properties.popup && <Popup>{properties.popup}</Popup>}
-          </Marker>
+            onclick={() => setSelected(id)}
+            positions={properties.positions}
+            color={properties.color}
+          />
         );
       default:
-        break;
+        return <></>;
     }
   };
 
@@ -111,13 +164,28 @@ function App() {
             onCreated={createLayer}
             onEdited={updateLayer}
             onDeleted={deleteLayer}
+            draw={{
+              circlemarker: false,
+              rectangle: false,
+              polyline: false,
+            }}
           />
-          {state.features.map((item, key) => renderObject({ ...item, key }))}
+          {state.features.map((item) => renderObject(item))}
         </FeatureGroup>
-        <Pane>
-          <Debug state={state} center={center} zoom={zoom} selected={selected} />
-        </Pane>
+        <Control position="topleft" className="rrbe_map__paint">
+          <button type="button" onClick={() => setOpen(!open)}>
+            <img src={PaintIcon} width="15" alt="Редактировать параметры" />
+          </button>
+        </Control>
       </Map>
+      <ModalControl
+        open={open}
+        selected={selected}
+        onClose={() => setOpen(false)}
+        dispatch={dispatch}
+        features={state.features}
+      />
+      <Debug state={state} center={center} zoom={zoom} selected={selected} />
     </div>
   );
 }

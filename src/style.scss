@@ -11,6 +11,19 @@
     bottom: 0;
   }
 
+  &__paint {
+    background-color: #fff;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    text-align: center;
+    button {
+      margin-top: 3px;
+      background: none;
+      border: 0;
+      cursor: pointer;
+    }
+  }
+
   &__debug {
     position: absolute;
     height: 95%;
@@ -32,6 +45,8 @@
         display: none;
         width: 50%;
         min-height: 300px;
+        max-height: 50vh;
+        overflow: auto;
         left: 25%;
         top: 25%;
         background-color: #fff;
@@ -73,25 +88,6 @@
           }
         }
       }
-    }
-  }
-
-  &__leftbottom {
-    position: absolute;
-    left: 10px;
-    top: 132px;
-    max-width: 25px;
-    background-color: #fff;
-    padding: 5px 6px;
-    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
-    border-radius: 4px;
-    text-align: center;
-    button {
-      margin-left: 2px;
-      margin-top: 2px;
-      background: none;
-      border: 0;
-      cursor: pointer;
     }
   }
 }
