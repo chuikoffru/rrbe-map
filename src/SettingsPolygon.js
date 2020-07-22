@@ -1,11 +1,10 @@
 import React, { useState } from "react";
 import { SketchPicker } from "react-color";
 import { updateFeature } from "./store/actions";
-import { iconTypes } from "./DivIcon";
 
-const SettingsMarker = ({ feature, dispatch }) => {
-  const [color, setColor] = useState(feature.properties.color);
-  const icons = Object.keys(iconTypes);
+const SettingsPolygon = ({ feature, dispatch }) => {
+  const [color, setColor] = useState("#fe57a1");
+  const [opacity, setOpacity] = useState(feature.properties.opacity);
 
   const saveColor = ({ hex }) => {
     feature.properties.color = hex;
@@ -17,8 +16,9 @@ const SettingsMarker = ({ feature, dispatch }) => {
     dispatch(updateFeature(feature));
   };
 
-  const saveIcon = (event) => {
-    feature.properties.iconName = event.target.value;
+  const handleOpacity = (value) => {
+    setOpacity(value);
+    feature.properties.opacity = value;
     dispatch(updateFeature(feature));
   };
 
@@ -30,16 +30,19 @@ const SettingsMarker = ({ feature, dispatch }) => {
         onChangeComplete={saveColor}
         onChange={({ hex }) => setColor(hex)}
       />
-      <p>Иконка</p>
-      <select onChange={saveIcon} value={feature.properties.iconName}>
-        {icons.map((name, key) => (
-          <option key={key}>{name}</option>
-        ))}
-      </select>
+      <p>Прозрачность</p>
+      <input
+        type="range"
+        value={opacity}
+        min="0.0"
+        step="0.05"
+        max="1.0"
+        onChange={(e) => handleOpacity(+e.target.value)}
+      />
       <p>Подпись</p>
       <textarea defaultValue={feature.properties.popup} onBlur={saveText} />
     </div>
   );
 };
 
-export default SettingsMarker;
+export default SettingsPolygon;

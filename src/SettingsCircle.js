@@ -5,6 +5,7 @@ import { updateFeature } from "./store/actions";
 const SettingsCircle = ({ feature, dispatch }) => {
   const [color, setColor] = useState("#fe57a1");
   const [radius, setRadius] = useState(feature.properties.radius);
+  const [opacity, setOpacity] = useState(feature.properties.opacity);
 
   const saveColor = ({ hex }) => {
     feature.properties.color = hex;
@@ -14,6 +15,12 @@ const SettingsCircle = ({ feature, dispatch }) => {
   const handleRadius = (value) => {
     setRadius(value);
     feature.properties.radius = value;
+    dispatch(updateFeature(feature));
+  };
+
+  const handleOpacity = (value) => {
+    setOpacity(value);
+    feature.properties.opacity = value;
     dispatch(updateFeature(feature));
   };
 
@@ -38,6 +45,15 @@ const SettingsCircle = ({ feature, dispatch }) => {
         step="1000"
         max="50000"
         onChange={(e) => handleRadius(+e.target.value)}
+      />
+      <p>Прозрачность</p>
+      <input
+        type="range"
+        value={opacity}
+        min="0.0"
+        step="0.05"
+        max="1.0"
+        onChange={(e) => handleOpacity(+e.target.value)}
       />
       <p>Подпись</p>
       <textarea defaultValue={feature.properties.popup} onBlur={saveText} />

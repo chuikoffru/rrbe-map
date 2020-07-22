@@ -12,8 +12,8 @@ import { getPositions } from "./helpers/getPositions";
 
 import Debug from "./Debug";
 import ModalControl from "./ModalControl";
+import { DivIcon } from "./DivIcon";
 
-import MarkerIcon from "./assets/marker.svg";
 import PaintIcon from "./assets/paint.svg";
 
 import "leaflet/dist/leaflet.css";
@@ -36,7 +36,7 @@ function App() {
 
     // Свойства для маркера
     if (layer instanceof L.Marker) {
-      geojson.properties.iconName = "marker";
+      geojson.properties.iconName = "Marker";
     }
 
     if (layer instanceof L.Polygon) {
@@ -53,6 +53,7 @@ function App() {
       let geojson = layer.toGeoJSON(14);
       geojson.id = layer.options.id;
       geojson.properties = cleanOptions(layer.options);
+      console.log("geojson.properties", geojson.properties, layer.options);
 
       if (layer instanceof L.Circle) {
         geojson.properties.radius = layer.getRadius();
@@ -87,15 +88,6 @@ function App() {
     }
   }, [state]);
 
-  const renderIcon = (name) => {
-    switch (name) {
-      case "marker":
-        return new L.Icon({ iconUrl: MarkerIcon, iconSize: [36, 36] });
-      default:
-        return new L.Icon({ iconUrl: MarkerIcon, iconSize: [36, 36] });
-    }
-  };
-
   const renderObject = ({ id, properties, geometry }) => {
     const { coordinates, type } = geometry;
     switch (type) {
@@ -110,6 +102,9 @@ function App() {
               radius={properties.radius}
               color={properties.color}
               center={position}
+              opacity={properties.opacity}
+              fillOpacity={properties.opacity}
+              fillColor={properties.color}
               onclick={() => setSelected(id)}
             >
               {properties.popup && <Popup>{properties.popup}</Popup>}
@@ -123,8 +118,8 @@ function App() {
               position={position}
               onclick={() => setSelected(id)}
               popup={properties.popup}
-              iconName={properties.icon}
-              icon={renderIcon(properties.iconName)}
+              iconName={properties.iconName}
+              icon={DivIcon(properties.iconName, properties.color)}
             >
               {properties.popup && <Popup>{properties.popup}</Popup>}
             </Marker>
@@ -138,7 +133,12 @@ function App() {
             onclick={() => setSelected(id)}
             positions={properties.positions}
             color={properties.color}
-          />
+            opacity={properties.opacity}
+            fillOpacity={properties.opacity}
+            fillColor={properties.color}
+          >
+            {properties.popup && <Popup>{properties.popup}</Popup>}
+          </Polygon>
         );
       default:
         return <></>;

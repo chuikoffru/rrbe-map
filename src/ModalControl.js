@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
 import SettingsCircle from "./SettingsCircle";
+import SettingsPolygon from "./SettingsPolygon";
+import SettingsMarker from "./SettingsMarker";
 import { isCircle } from "./helpers/isCircle";
+import { isPolygon } from "./helpers/isPolygon";
+import { isMarker } from "./helpers/isMarker";
 
 const ModalControl = ({ selected, features, open, onClose, dispatch }) => {
   const [feature, setFeature] = useState(null);
@@ -22,6 +26,8 @@ const ModalControl = ({ selected, features, open, onClose, dispatch }) => {
         </button>
         <h3>Настройки</h3>
         {isCircle(feature) && <SettingsCircle dispatch={dispatch} feature={feature} />}
+        {isPolygon(feature) && <SettingsPolygon dispatch={dispatch} feature={feature} />}
+        {isMarker(feature) && <SettingsMarker dispatch={dispatch} feature={feature} />}
       </div>
     </div>
   );
