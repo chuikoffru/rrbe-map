@@ -13,6 +13,9 @@ import { getPositions } from "./helpers/getPositions";
 import Debug from "./Debug";
 import ModalControl from "./ModalControl";
 import { DivIcon } from "./DivIcon";
+import { isCircle } from "./helpers/isCircle";
+import { isMarker } from "./helpers/isMarker";
+import { isPolygon } from "./helpers/isPolygon";
 
 import PaintIcon from "./assets/paint.svg";
 
@@ -88,60 +91,57 @@ function App() {
     }
   }, [state]);
 
-  const renderObject = ({ id, properties, geometry }) => {
-    const { coordinates, type } = geometry;
-    switch (type) {
-      case "Point":
-        const position = new L.LatLng(coordinates[1], coordinates[0]);
-        if (properties.radius) {
-          return (
-            <Circle
-              key={id}
-              id={id}
-              popup={properties.popup}
-              radius={properties.radius}
-              color={properties.color}
-              center={position}
-              opacity={properties.opacity}
-              fillOpacity={properties.opacity}
-              fillColor={properties.color}
-              onclick={() => setSelected(id)}
-            >
-              {properties.popup && <Popup>{properties.popup}</Popup>}
-            </Circle>
-          );
-        } else {
-          return (
-            <Marker
-              key={id}
-              id={id}
-              position={position}
-              onclick={() => setSelected(id)}
-              popup={properties.popup}
-              iconName={properties.iconName}
-              icon={DivIcon(properties.iconName, properties.color)}
-            >
-              {properties.popup && <Popup>{properties.popup}</Popup>}
-            </Marker>
-          );
-        }
-      case "Polygon":
-        return (
-          <Polygon
-            key={id}
-            id={id}
-            onclick={() => setSelected(id)}
-            positions={properties.positions}
-            color={properties.color}
-            opacity={properties.opacity}
-            fillOpacity={properties.opacity}
-            fillColor={properties.color}
-          >
-            {properties.popup && <Popup>{properties.popup}</Popup>}
-          </Polygon>
-        );
-      default:
-        return <></>;
+  const renderObject = (feature) => {
+    const { id, properties, geometry } = feature;
+    const { coordinates } = geometry;
+    const position = new L.LatLng(coordinates[1], coordinates[0]);
+
+    if (isCircle(feature)) {
+      return (
+        <Circle
+          key={id}
+          id={id}
+          popup={properties.popup}
+          radius={properties.radius}
+          color={properties.color}
+          center={position}
+          opacity={properties.opacity}
+          fillOpacity={properties.opacity}
+          fillColor={properties.color}
+          onclick={() => setSelected(id)}
+        >
+          {properties.popup && <Popup>{properties.popup}</Popup>}
+        </Circle>
+      );
+    } else if (isMarker(feature)) {
+      return (
+        <Marker
+          key={id}
+          id={id}
+          position={position}
+          onclick={() => setSelected(id)}
+          popup={properties.popup}
+          iconName={properties.iconName}
+          icon={DivIcon(properties.iconName, properties.color)}
+        >
+          {properties.popup && <Popup>{properties.popup}</Popup>}
+        </Marker>
+      );
+    } else if (isPolygon(feature)) {
+      return (
+        <Polygon
+          key={id}
+          id={id}
+          onclick={() => setSelected(id)}
+          positions={properties.positions}
+          color={properties.color}
+          opacity={properties.opacity}
+          fillOpacity={properties.opacity}
+          fillColor={properties.color}
+        >
+          {properties.popup && <Popup>{properties.popup}</Popup>}
+        </Polygon>
+      );
     }
   };
 
@@ -170,7 +170,7 @@ function App() {
               polyline: false,
             }}
           />
-          {state.features.map((item) => renderObject(item))}
+          {state.features.map((feature) => renderObject(feature))}
         </FeatureGroup>
         <Control position="topleft" className="rrbe_map__paint">
           <button type="button" onClick={() => setOpen(!open)}>
