@@ -5,18 +5,20 @@ import SettingsMarker from "./SettingsMarker";
 import { isCircle } from "./helpers/isCircle";
 import { isPolygon } from "./helpers/isPolygon";
 import { isMarker } from "./helpers/isMarker";
+import { updateFeature } from "./store/actions";
 
-const ModalControl = ({ selected, features, open, onClose, dispatch }) => {
+const ModalControl = ({ selected, state, open, onClose, dispatch, fg }) => {
   const [feature, setFeature] = useState(null);
 
   useEffect(() => {
     if (selected) {
-      const feature = features.filter((item) => item.id === selected);
-      if (feature.length > 0) {
-        setFeature(feature[0]);
-      }
+      const layer = fg.leafletElement.getLayer(selected);
+      layer.setStyle({ color: "red" });
+      layer.feature.properties.color = "red";
+      dispatch(updateFeature(fg.leafletElement.toGeoJSON()));
+      //console.log("layer", fg.leafletElement.toGeoJSON());
     }
-  }, [features, selected]);
+  }, [dispatch, fg, selected]);
 
   return (
     <div className="rrbe_map__modal modal">

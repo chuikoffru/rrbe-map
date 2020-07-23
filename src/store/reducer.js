@@ -12,12 +12,7 @@ export const reducer = (state = initialState, action) => {
     case ADD_GEOJSON:
       return { ...state, features: [...state.features, action.payload] };
     case UPDATE_GEOJSON:
-      return {
-        ...state,
-        features: state.features.map((item) =>
-          action.payload.id === item.id ? action.payload : item
-        ),
-      };
+      return { ...state, features: action.payload };
     case DELETE_GEOJSON:
       return {
         ...state,
