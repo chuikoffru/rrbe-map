@@ -11,7 +11,6 @@ import { isPolygon } from "./helpers/isPolygon";
 import { customIcon } from "./DivIcon";
 import tooltipOptions from "./helpers/tooltipOptions";
 
-import Debug from "./Debug";
 import ModalControl from "./ModalControl";
 
 import PaintIcon from "./assets/paint.svg";
@@ -164,7 +163,6 @@ function App() {
           fg={FG.current}
         />
       )}
-      <Debug state={state} selected={selected} />
     </div>
   );
 }

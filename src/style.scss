@@ -24,20 +24,6 @@
     }
   }
 
-  &__debug {
-    position: absolute;
-    height: 95%;
-    overflow: auto;
-    top: 10px;
-    right: 10px;
-    width: 30%;
-    background-color: #fff;
-    z-index: 999;
-    pre {
-      padding: 10px;
-    }
-  }
-
   &__modal {
     .modal {
       &__body {
