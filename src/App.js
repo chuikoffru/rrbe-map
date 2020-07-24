@@ -9,6 +9,7 @@ import { isCircle } from "./helpers/isCircle";
 import { isMarker } from "./helpers/isMarker";
 import { isPolygon } from "./helpers/isPolygon";
 import { customIcon } from "./DivIcon";
+import tooltipOptions from "./helpers/tooltipOptions";
 
 import Debug from "./Debug";
 import ModalControl from "./ModalControl";
@@ -43,9 +44,8 @@ function App() {
       console.log("geojson", geojson);
       // Задаем ID
       geojson.id = id;
+      geojson.properties.text = geojson.properties.text ? geojson.properties.text : "";
       // Задаем опции
-      //console.log("layer.options", layer);
-      // Обновляем опции для круга
       if (layer instanceof L.Circle) {
         geojson.properties.radius = layer.getRadius();
         geojson.properties.color = layer.options.color;
@@ -56,6 +56,10 @@ function App() {
         geojson.properties.icon = geojson.properties.icon ? geojson.properties.icon : "Marker";
         //console.log("layer", layer);
         layer.setIcon(customIcon(geojson.properties.icon));
+      }
+
+      if (geojson.properties.text) {
+        layer.bindTooltip(geojson.properties.text, tooltipOptions);
       }
 
       // Добавляем в массив
@@ -113,6 +117,9 @@ function App() {
           layer.addEventListener("click", handleSelected);
           if (layer instanceof L.Marker) {
             layer.setIcon(customIcon(feature.properties.icon, feature.properties.color));
+          }
+          if (feature.properties.text) {
+            layer.bindTooltip(feature.properties.text, tooltipOptions);
           }
           FG.current.leafletElement.addLayer(layer);
         },

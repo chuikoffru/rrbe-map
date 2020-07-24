@@ -1,6 +1,8 @@
 import React, { useState, useLayoutEffect } from "react";
 import L from "leaflet";
+
 import { iconTypes, customIcon } from "./DivIcon";
+import tooltipOptions from "./helpers/tooltipOptions";
 
 const ModalControl = ({ selected, state, open, onClose, setState, fg }) => {
   //const layer = fg.leafletElement.getLayer(selected);
@@ -66,6 +68,12 @@ const ModalControl = ({ selected, state, open, onClose, setState, fg }) => {
 
   const handleText = (event) => {
     setProperties({ ...properties, text: event.target.value });
+    const layer = getLayer();
+    if (layer.getTooltip()) {
+      layer.setTooltipContent(event.target.value);
+    } else {
+      layer.bindTooltip(event.target.value, tooltipOptions);
+    }
   };
 
   const renderOption = (name) => {
