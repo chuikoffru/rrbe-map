@@ -1,24 +1,86 @@
-import React, { useState, useEffect } from "react";
-import SettingsCircle from "./SettingsCircle";
-import SettingsPolygon from "./SettingsPolygon";
-import SettingsMarker from "./SettingsMarker";
-import { isCircle } from "./helpers/isCircle";
-import { isPolygon } from "./helpers/isPolygon";
-import { isMarker } from "./helpers/isMarker";
-import { updateFeature } from "./store/actions";
+import React, { useState, useLayoutEffect } from "react";
+import L from "leaflet";
+import { iconTypes, customIcon } from "./DivIcon";
 
-const ModalControl = ({ selected, state, open, onClose, dispatch, fg }) => {
-  const [feature, setFeature] = useState(null);
+const ModalControl = ({ selected, state, open, onClose, setState, fg }) => {
+  //const layer = fg.leafletElement.getLayer(selected);
+  const colors = ["#3388ff", "#dc3545", "#28a745", "#ffc107", "#6c757d"];
+  const icons = Object.keys(iconTypes);
+  const [properties, setProperties] = useState({});
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (selected) {
-      const layer = fg.leafletElement.getLayer(selected);
-      layer.setStyle({ color: "red" });
-      layer.feature.properties.color = "red";
-      dispatch(updateFeature(fg.leafletElement.toGeoJSON()));
-      //console.log("layer", fg.leafletElement.toGeoJSON());
+      const feature = state.features.filter((item) => item.id === selected);
+      if (feature.length > 0) {
+        setProperties(feature[0].properties);
+      }
     }
-  }, [dispatch, fg, selected]);
+  }, [selected, state.features]);
+
+  const getId = (layer) => {
+    if (layer.feature?.id) {
+      return layer.feature.id;
+    } else {
+      return fg.leafletElement.getLayerId(layer);
+    }
+  };
+
+  const getLayer = () => {
+    let layer;
+    fg.leafletElement.eachLayer((item) => {
+      if (selected === getId(item)) {
+        layer = item;
+      }
+    });
+    return layer;
+  };
+
+  // Сохраняем все настройки
+  const saveSettings = () => {
+    const features = state.features.map((item) => {
+      if (item.id === selected) {
+        item.properties = properties;
+      }
+      return item;
+    });
+    setState({ ...state, features });
+    onClose();
+  };
+
+  //Меняем цвет
+  const handleColor = (hex) => {
+    setProperties({ ...properties, color: hex });
+    const layer = getLayer();
+    if (layer instanceof L.Marker) {
+      layer.setIcon(customIcon(properties.icon, hex));
+    } else {
+      layer.setStyle({ color: hex });
+    }
+  };
+
+  const handleIcon = (name) => {
+    setProperties({ ...properties, icon: name });
+    const layer = getLayer();
+    layer.setIcon(customIcon(name, properties.color));
+  };
+
+  const handleText = (event) => {
+    setProperties({ ...properties, text: event.target.value });
+  };
+
+  const renderOption = (name) => {
+    let Icon = iconTypes[name];
+    return (
+      <button
+        key={name}
+        type="button"
+        className={`icon ${name === properties.icon ? "active" : ""}`}
+        onClick={() => handleIcon(name)}
+      >
+        <Icon fill={properties.color} width={24} height={24} />
+      </button>
+    );
+  };
 
   return (
     <div className="rrbe_map__modal modal">
@@ -27,9 +89,33 @@ const ModalControl = ({ selected, state, open, onClose, dispatch, fg }) => {
           X
         </button>
         <h3>Настройки</h3>
-        {isCircle(feature) && <SettingsCircle dispatch={dispatch} feature={feature} />}
-        {isPolygon(feature) && <SettingsPolygon dispatch={dispatch} feature={feature} />}
-        {isMarker(feature) && <SettingsMarker dispatch={dispatch} feature={feature} />}
+        <div className="modal__body-text">
+          <label>
+            Всплывающая подсказка
+            <textarea value={properties.text} onChange={handleText} />
+          </label>
+        </div>
+        {properties.color && (
+          <div className="modal__body-color">
+            {colors.map((item, key) => (
+              <button
+                key={key}
+                type="button"
+                style={{
+                  backgroundColor: item,
+                }}
+                className={`color ${item === properties.color ? "active" : ""}`}
+                onClick={() => handleColor(item)}
+              />
+            ))}
+          </div>
+        )}
+        {properties.icon && (
+          <div className="modal__body-icon">{icons.map((name) => renderOption(name))}</div>
+        )}
+        <button type="button" className="modal__body-save" onClick={saveSettings}>
+          Сохранить
+        </button>
       </div>
     </div>
   );

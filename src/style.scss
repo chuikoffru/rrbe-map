@@ -71,27 +71,54 @@
             background: none;
             margin: 10px 10px 10px 0;
             cursor: pointer;
-            &.red {
-              background-color: red;
-            }
-            &.blue {
-              background-color: blue;
-            }
-            &.green {
-              background-color: green;
-            }
             &.active {
-              background-image: url("https://raw.githubusercontent.com/chuikoffru/react-jktvc9/master/correct.png");
+              background-image: url("./assets/correct.png");
               background-position: center center;
               background-repeat: no-repeat;
             }
+          }
+        }
+        &-text {
+          label {
+            color: #6c757d;
+            display: flex;
+            flex-direction: column;
+            textarea {
+              margin: 10px 0;
+            }
+          }
+        }
+        &-icon {
+          button {
+            background-color: #fff;
+            border: 0;
+            padding: 5px 8px;
+            cursor: pointer;
+            border-radius: 3px;
+            &.active {
+              border: 1px solid #343a40;
+            }
+          }
+        }
+        &-save {
+          cursor: pointer;
+          display: block;
+          border: 0;
+          background-color: #6c757d;
+          padding: 10px 15px;
+          color: #fff;
+          margin: 15px 0;
+          &:hover {
+            background-color: #343a40;
           }
         }
       }
     }
   }
 }
-.leaflet-div-icon {
-  background: transparent;
-  border: none;
-}
+/* .leaflet-marker-icon {
+  &.leaflet-div-icon {
+    background: transparent;
+    border: none;
+  }
+} */

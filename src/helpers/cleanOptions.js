@@ -12,12 +12,14 @@ export const extraOptions = [
   "leaflet",
   "onclick",
   "pane",
-  "original",
-  "icon",
   "editing",
   "position",
   "maintainColor",
   "clickable",
+  "fillRule",
+  "noClip",
+  "fill",
+  "smoothFactor",
 ];
 
 export const cleanOptions = (options) => removeProperties(options, ...extraOptions);

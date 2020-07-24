@@ -1,12 +1,14 @@
-import React, { useEffect, useState, useReducer, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import L from "leaflet";
 
 import { Map, FeatureGroup, TileLayer } from "react-leaflet";
 import { EditControl } from "react-leaflet-draw";
 import Control from "react-leaflet-control";
 
-import { initialState, reducer } from "./store/reducer";
-import { updateFeature } from "./store/actions";
+import { isCircle } from "./helpers/isCircle";
+import { isMarker } from "./helpers/isMarker";
+import { isPolygon } from "./helpers/isPolygon";
+import { customIcon } from "./DivIcon";
 
 import Debug from "./Debug";
 import ModalControl from "./ModalControl";
@@ -21,21 +23,50 @@ function App() {
   const FG = useRef(null);
   const MAP = useRef(null);
   const [selected, setSelected] = useState(null);
-  const [state, dispatch] = useReducer(reducer, initialState);
+  const [state, setState] = useState({
+    type: "FeatureCollection",
+    features: JSON.parse(localStorage.getItem("features")) || [],
+  });
   const [open, setOpen] = useState(false);
 
   const handleObserver = (e) => {
+    const { leafletElement } = FG.current;
     // Обновляем дерево geojson
     let features = [];
-    FG.current.leafletElement.eachLayer((layer) => {
+    // Проходимся по каждому слою
+    leafletElement.eachLayer((layer) => {
+      const id = leafletElement.getLayerId(layer);
+      // Вешаем обработчик клика по объекту
       layer.addEventListener("click", handleSelected);
-      features.push(layer.toGeoJSON());
+      // Преобразуем в geojson
+      let geojson = layer.toGeoJSON();
+      console.log("geojson", geojson);
+      // Задаем ID
+      geojson.id = id;
+      // Задаем опции
+      //console.log("layer.options", layer);
+      // Обновляем опции для круга
+      if (layer instanceof L.Circle) {
+        geojson.properties.radius = layer.getRadius();
+        geojson.properties.color = layer.options.color;
+      } else if (layer instanceof L.Polygon) {
+        geojson.properties.color = layer.options.color;
+      } else if (layer instanceof L.Marker) {
+        geojson.properties.color = geojson.properties.color ? geojson.properties.color : "#3388ff";
+        geojson.properties.icon = geojson.properties.icon ? geojson.properties.icon : "Marker";
+        //console.log("layer", layer);
+        layer.setIcon(customIcon(geojson.properties.icon));
+      }
+
+      // Добавляем в массив
+      features.push(geojson);
     });
-    dispatch(updateFeature(features));
+
+    setState({ ...state, features });
 
     if (e.type === "draw:created") {
       // Если добавили новый, то делаем его активным
-      const id = FG.current.leafletElement.getLayerId(e.layer);
+      const id = leafletElement.getLayerId(e.layer);
       setSelected(id);
     } else if (e.type === "draw:deleted") {
       // Если удалили, то сбрасываем активный элемент
@@ -44,8 +75,13 @@ function App() {
   };
 
   const handleSelected = (e) => {
-    const id = FG.current.leafletElement.getLayerId(e.target);
-    setSelected(id);
+    console.log("e.target", e.target);
+    if (e.target.feature) {
+      setSelected(e.target.feature.id);
+    } else {
+      const id = FG.current.leafletElement.getLayerId(e.target);
+      setSelected(id);
+    }
   };
 
   useEffect(() => {
@@ -55,10 +91,32 @@ function App() {
   }, [state.features]);
 
   const whenReady = () => {
-    const layers = L.geoJSON(state);
-    layers.eachLayer((layer) => {
-      layer.addEventListener("click", handleSelected);
-      FG.current.leafletElement.addLayer(layer);
+    console.log("I`m ready!");
+    state.features.forEach((geojson) => {
+      // Конвертируем geojson в слой leaflet
+      L.geoJSON(geojson, {
+        pointToLayer: (geojson, latlng) => {
+          //console.log("geoJsonPoint", geojson);
+          // Создаем точные типы слоев
+          if (isCircle(geojson)) {
+            let circle = L.circle(latlng, geojson.properties);
+            return circle;
+          } else if (isMarker(geojson)) {
+            let marker = L.marker(latlng, geojson.properties);
+            return marker;
+          } else if (isPolygon(geojson)) {
+            let polygon = L.polygon(latlng, geojson.properties);
+            return polygon;
+          }
+        },
+        onEachFeature: (feature, layer) => {
+          layer.addEventListener("click", handleSelected);
+          if (layer instanceof L.Marker) {
+            layer.setIcon(customIcon(feature.properties.icon, feature.properties.color));
+          }
+          FG.current.leafletElement.addLayer(layer);
+        },
+      });
     });
   };
 
@@ -88,20 +146,24 @@ function App() {
             }}
           />
         </FeatureGroup>
-        <Control position="topleft" className="rrbe_map__paint">
-          <button type="button" onClick={() => setOpen(!open)}>
-            <img src={PaintIcon} width="15" alt="Редактировать параметры" />
-          </button>
-        </Control>
+        {selected && (
+          <Control position="topleft" className="rrbe_map__paint">
+            <button type="button" onClick={() => setOpen(!open)}>
+              <img src={PaintIcon} width="15" alt="Редактировать параметры" />
+            </button>
+          </Control>
+        )}
       </Map>
-      <ModalControl
-        open={open}
-        selected={selected}
-        onClose={() => setOpen(false)}
-        dispatch={dispatch}
-        state={state}
-        fg={FG.current}
-      />
+      {selected && (
+        <ModalControl
+          open={open}
+          selected={selected}
+          onClose={() => setOpen(false)}
+          setState={setState}
+          state={state}
+          fg={FG.current}
+        />
+      )}
       <Debug state={state} selected={selected} />
     </div>
   );

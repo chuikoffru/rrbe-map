@@ -22,7 +22,7 @@ export const iconTypes = {
   Sheep,
 };
 
-export const DivIcon = (name = "Marker", color = "blue", size = [36, 36]) => {
+export const customIcon = (name = "Marker", color = "#3388ff", size = [36, 36]) => {
   // Получаем svg
   let Icon = iconTypes[name];
   // Переводим компонент в статику
