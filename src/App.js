@@ -22,7 +22,6 @@ import "./style.scss";
 
 function App() {
   const FG = useRef(null);
-  const MAP = useRef(null);
   const [selected, setSelected] = useState(null);
   const [state, setState] = useState({
     type: "FeatureCollection",
@@ -41,7 +40,6 @@ function App() {
       layer.addEventListener("click", handleSelected);
       // Преобразуем в geojson
       let geojson = layer.toGeoJSON();
-      console.log("geojson", geojson);
       // Задаем ID
       geojson.id = id;
       geojson.properties.text = geojson.properties.text ? geojson.properties.text : "";
@@ -54,8 +52,7 @@ function App() {
       } else if (layer instanceof L.Marker) {
         geojson.properties.color = geojson.properties.color ? geojson.properties.color : "#3388ff";
         geojson.properties.icon = geojson.properties.icon ? geojson.properties.icon : "Marker";
-        //console.log("layer", layer);
-        layer.setIcon(customIcon(geojson.properties.icon));
+        layer.setIcon(customIcon(geojson.properties.icon, geojson.properties.color));
       }
 
       if (geojson.properties.text) {
@@ -79,7 +76,6 @@ function App() {
   };
 
   const handleSelected = (e) => {
-    console.log("e.target", e.target);
     if (e.target.feature) {
       setSelected(e.target.feature.id);
     } else {
@@ -95,12 +91,10 @@ function App() {
   }, [state.features]);
 
   const whenReady = () => {
-    console.log("I`m ready!");
     state.features.forEach((geojson) => {
       // Конвертируем geojson в слой leaflet
       L.geoJSON(geojson, {
         pointToLayer: (geojson, latlng) => {
-          //console.log("geoJsonPoint", geojson);
           // Создаем точные типы слоев
           if (isCircle(geojson)) {
             let circle = L.circle(latlng, geojson.properties);
@@ -136,7 +130,6 @@ function App() {
         style={{
           height: window.innerHeight,
         }}
-        ref={MAP}
         whenReady={whenReady}
       >
         <TileLayer url="http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />

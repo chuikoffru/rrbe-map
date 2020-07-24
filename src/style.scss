@@ -116,9 +116,9 @@
     }
   }
 }
-/* .leaflet-marker-icon {
-  &.leaflet-div-icon {
+.leaflet-marker-icon {
+  &.leaflet-div-icon:not(.leaflet-editing-icon) {
     background: transparent;
     border: none;
   }
-} */
+}
