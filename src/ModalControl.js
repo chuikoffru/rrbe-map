@@ -5,7 +5,6 @@ import { iconTypes, customIcon } from "./DivIcon";
 import tooltipOptions from "./helpers/tooltipOptions";
 
 const ModalControl = ({ selected, state, open, onClose, setState, fg }) => {
-  //const layer = fg.leafletElement.getLayer(selected);
   const colors = ["#3388ff", "#dc3545", "#28a745", "#ffc107", "#6c757d"];
   const icons = Object.keys(iconTypes);
   const [properties, setProperties] = useState({});

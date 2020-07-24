@@ -1,16 +1,20 @@
 {
-  "name": "rrbe-map",
-  "version": "0.1.0",
-  "private": true,
+  "name": "map-designer",
+  "version": "1.0.0",
+  "private": false,
+  "peerDependencies": {
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1"
+  },
   "dependencies": {
     "leaflet": "^1.6.0",
     "leaflet-draw": "^1.0.4",
-    "node-sass": "^4.14.1",
-    "react": "^16.13.1",
-    "react-dom": "^16.13.1",
     "react-leaflet": "^2.7.0",
     "react-leaflet-control": "^2.1.2",
-    "react-leaflet-draw": "^0.19.0",
+    "react-leaflet-draw": "^0.19.0"
+  },
+  "devDependencies": {
+    "node-sass": "^4.14.1",
     "react-scripts": "3.4.1"
   },
   "scripts": {

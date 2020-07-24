@@ -13,19 +13,16 @@ import tooltipOptions from "./helpers/tooltipOptions";
 
 import ModalControl from "./ModalControl";
 
-import PaintIcon from "./assets/paint.svg";
+import { ReactComponent as PaintIcon } from "./assets/paint.svg";
 
 import "leaflet/dist/leaflet.css";
 import "leaflet-draw/dist/leaflet.draw.css";
 import "./style.scss";
 
-function App() {
+function MapDesigner({ height, isEditable, center, zoom, data, saveData }) {
   const FG = useRef(null);
   const [selected, setSelected] = useState(null);
-  const [state, setState] = useState({
-    type: "FeatureCollection",
-    features: JSON.parse(localStorage.getItem("features")) || [],
-  });
+  const [state, setState] = useState(data);
   const [open, setOpen] = useState(false);
 
   const handleObserver = (e) => {
@@ -86,8 +83,9 @@ function App() {
   useEffect(() => {
     if (state.features) {
       localStorage.setItem("features", JSON.stringify(state.features));
+      saveData(state);
     }
-  }, [state.features]);
+  }, [saveData, state, state.features]);
 
   const whenReady = () => {
     state.features.forEach((geojson) => {
@@ -123,11 +121,11 @@ function App() {
   return (
     <div className="rrbe-map">
       <Map
-        center={[54.57299842212406, 56.20845794677735]}
-        zoom={11}
+        center={center}
+        zoom={zoom}
         className="rrbe-map__container"
         style={{
-          height: window.innerHeight,
+          height,
         }}
         whenReady={whenReady}
       >
@@ -142,18 +140,25 @@ function App() {
               circlemarker: false,
               rectangle: false,
               polyline: false,
+              polygon: isEditable,
+              circle: isEditable,
+              marker: isEditable,
+            }}
+            edit={{
+              edit: isEditable,
+              remove: isEditable,
             }}
           />
         </FeatureGroup>
-        {selected && (
+        {isEditable && selected && (
           <Control position="topleft" className="rrbe_map__paint">
             <button type="button" onClick={() => setOpen(!open)}>
-              <img src={PaintIcon} width="15" alt="Редактировать параметры" />
+              <PaintIcon width="15" height="15" fill="#464646" />
             </button>
           </Control>
         )}
       </Map>
-      {selected && (
+      {isEditable && selected && (
         <ModalControl
           open={open}
           selected={selected}
@@ -167,4 +172,4 @@ function App() {
   );
 }
 
-export default App;
+export default MapDesigner;
