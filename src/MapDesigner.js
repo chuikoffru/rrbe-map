@@ -19,7 +19,17 @@ import "leaflet/dist/leaflet.css";
 import "leaflet-draw/dist/leaflet.draw.css";
 import "./style.scss";
 
-function MapDesigner({ height, isEditable, center, zoom, data, saveData }) {
+function noob() {}
+
+function MapDesigner({
+  className,
+  isEditable = false,
+  center,
+  zoom,
+  data,
+  saveData = noob,
+  onTap = noob,
+}) {
   const FG = useRef(null);
   const [selected, setSelected] = useState(null);
   const [state, setState] = useState(data);
@@ -42,13 +52,15 @@ function MapDesigner({ height, isEditable, center, zoom, data, saveData }) {
       // Задаем опции
       if (layer instanceof L.Circle) {
         geojson.properties.radius = layer.getRadius();
-        geojson.properties.color = layer.options.color;
+        geojson.properties.fillColor = layer.options.fillColor;
       } else if (layer instanceof L.Polygon) {
-        geojson.properties.color = layer.options.color;
+        geojson.properties.fillColor = layer.options.fillColor;
       } else if (layer instanceof L.Marker) {
-        geojson.properties.color = geojson.properties.color ? geojson.properties.color : "#3388ff";
+        geojson.properties.fillColor = geojson.properties.fillColor
+          ? geojson.properties.fillColor
+          : "#3388ff";
         geojson.properties.icon = geojson.properties.icon ? geojson.properties.icon : "Marker";
-        layer.setIcon(customIcon(geojson.properties.icon, geojson.properties.color));
+        layer.setIcon(customIcon(geojson.properties.icon, geojson.properties.fillColor));
       }
 
       if (geojson.properties.text) {
@@ -72,6 +84,9 @@ function MapDesigner({ height, isEditable, center, zoom, data, saveData }) {
   };
 
   const handleSelected = (e) => {
+    // Отправляем событие во вне
+    onTap(e, FG.current);
+    // Проверяем есть ли feature у слоя
     if (e.target.feature) {
       setSelected(e.target.feature.id);
     } else {
@@ -80,17 +95,28 @@ function MapDesigner({ height, isEditable, center, zoom, data, saveData }) {
     }
   };
 
+  // Сохраняем данные после каждого изменения состояния
   useEffect(() => {
     if (state.features) {
-      localStorage.setItem("features", JSON.stringify(state.features));
       saveData(state);
+      whenReady();
     }
-  }, [saveData, state, state.features]);
+  }, [state]);
+
+  // Обновляем состояние после каждого изменения пропса
+  useEffect(() => {
+    if (data.features) {
+      setState(data);
+    }
+  }, [data]);
 
   const whenReady = () => {
     state.features.forEach((geojson) => {
       // Конвертируем geojson в слой leaflet
       L.geoJSON(geojson, {
+        coordsToLatLng: (coords) => {
+          return coords;
+        },
         pointToLayer: (geojson, latlng) => {
           // Создаем точные типы слоев
           if (isCircle(geojson)) {
@@ -107,11 +133,12 @@ function MapDesigner({ height, isEditable, center, zoom, data, saveData }) {
         onEachFeature: (feature, layer) => {
           layer.addEventListener("click", handleSelected);
           if (layer instanceof L.Marker) {
-            layer.setIcon(customIcon(feature.properties.icon, feature.properties.color));
+            layer.setIcon(customIcon(feature.properties.icon, feature.properties.fillColor));
           }
           if (feature.properties.text) {
             layer.bindTooltip(feature.properties.text, tooltipOptions);
           }
+          layer.setStyle(feature.properties);
           FG.current.leafletElement.addLayer(layer);
         },
       });
@@ -123,10 +150,7 @@ function MapDesigner({ height, isEditable, center, zoom, data, saveData }) {
       <Map
         center={center}
         zoom={zoom}
-        className="rrbe-map__container"
-        style={{
-          height,
-        }}
+        className={`rrbe-map__container ${className}`}
         whenReady={whenReady}
       >
         <TileLayer url="http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />

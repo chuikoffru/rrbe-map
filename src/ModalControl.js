@@ -50,19 +50,19 @@ const ModalControl = ({ selected, state, open, onClose, setState, fg }) => {
 
   //Меняем цвет
   const handleColor = (hex) => {
-    setProperties({ ...properties, color: hex });
+    setProperties({ ...properties, fillColor: hex });
     const layer = getLayer();
     if (layer instanceof L.Marker) {
       layer.setIcon(customIcon(properties.icon, hex));
     } else {
-      layer.setStyle({ color: hex });
+      layer.setStyle({ fillColor: hex });
     }
   };
 
   const handleIcon = (name) => {
     setProperties({ ...properties, icon: name });
     const layer = getLayer();
-    layer.setIcon(customIcon(name, properties.color));
+    layer.setIcon(customIcon(name, properties.fillColor));
   };
 
   const handleText = (event) => {
@@ -84,7 +84,7 @@ const ModalControl = ({ selected, state, open, onClose, setState, fg }) => {
         className={`icon ${name === properties.icon ? "active" : ""}`}
         onClick={() => handleIcon(name)}
       >
-        <Icon fill={properties.color} width={24} height={24} />
+        <Icon fill={properties.fillColor} width={24} height={24} />
       </button>
     );
   };
@@ -102,7 +102,7 @@ const ModalControl = ({ selected, state, open, onClose, setState, fg }) => {
             <textarea value={properties.text} onChange={handleText} />
           </label>
         </div>
-        {properties.color && (
+        {properties.fillColor && (
           <div className="modal__body-color">
             {colors.map((item, key) => (
               <button
@@ -111,7 +111,7 @@ const ModalControl = ({ selected, state, open, onClose, setState, fg }) => {
                 style={{
                   backgroundColor: item,
                 }}
-                className={`color ${item === properties.color ? "active" : ""}`}
+                className={`color ${item === properties.fillColor ? "active" : ""}`}
                 onClick={() => handleColor(item)}
               />
             ))}
