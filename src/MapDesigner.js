@@ -18,15 +18,17 @@ import { ReactComponent as PaintIcon } from "./assets/paint.svg";
 import "leaflet/dist/leaflet.css";
 import "leaflet-draw/dist/leaflet.draw.css";
 import "./style.scss";
+import Loader from "./Loader";
 
 function noob() {}
 
 function MapDesigner({
   className,
-  isEditable = false,
   center,
   zoom,
   data,
+  isEditable = false,
+  isLoading = false,
   saveData = noob,
   onTap = noob,
 }) {
@@ -150,6 +152,7 @@ function MapDesigner({
 
   return (
     <div className="rrbe-map">
+      {isLoading && <Loader />}
       <Map
         center={center}
         zoom={zoom}
