@@ -111,6 +111,9 @@ function MapDesigner({
   }, [data]);
 
   const whenReady = () => {
+    // Очищаем старые слои
+    FG.current && FG.current.leafletElement.clearLayers();
+    // Добавляем новые слои
     state.features.forEach((geojson) => {
       // Конвертируем geojson в слой leaflet
       L.geoJSON(geojson, {
