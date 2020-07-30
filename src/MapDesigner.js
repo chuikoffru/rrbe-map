@@ -12,13 +12,13 @@ import { customIcon } from "./DivIcon";
 import tooltipOptions from "./helpers/tooltipOptions";
 
 import ModalControl from "./ModalControl";
+import Loader from "./Loader";
 
 import { ReactComponent as PaintIcon } from "./assets/paint.svg";
 
 import "leaflet/dist/leaflet.css";
 import "leaflet-draw/dist/leaflet.draw.css";
 import "./style.scss";
-import Loader from "./Loader";
 
 function noob() {}
 
