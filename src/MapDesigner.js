@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import L from "leaflet";
 
 import { Map, FeatureGroup, TileLayer } from "react-leaflet";
@@ -85,36 +85,25 @@ function MapDesigner({
     }
   };
 
-  const handleSelected = (e) => {
-    // Отправляем событие во вне
-    onTap(e, FG.current);
-    // Проверяем есть ли feature у слоя
-    if (e.target.feature) {
-      setSelected(e.target.feature.id);
-    } else {
-      const id = FG.current.leafletElement.getLayerId(e.target);
-      setSelected(id);
-    }
-  };
+  const handleSelected = useCallback(
+    (e) => {
+      // Отправляем событие во вне
+      onTap(e, FG.current);
+      // Проверяем есть ли feature у слоя
+      if (e.target.feature) {
+        setSelected(e.target.feature.id);
+      } else {
+        const id = FG.current.leafletElement.getLayerId(e.target);
+        setSelected(id);
+      }
+    },
+    [onTap]
+  );
 
-  // Сохраняем данные после каждого изменения состояния
-  useEffect(() => {
-    if (state.features) {
-      saveData(state);
-      whenReady();
-    }
-  }, [state]);
-
-  // Обновляем состояние после каждого изменения пропса
-  useEffect(() => {
-    if (data.features) {
-      setState(data);
-    }
-  }, [data]);
-
-  const whenReady = () => {
+  const whenReady = useCallback(() => {
+    if (!FG.current) return;
     // Очищаем старые слои
-    FG.current && FG.current.leafletElement.clearLayers();
+    FG.current.leafletElement.clearLayers();
     // Добавляем новые слои
     state.features.forEach((geojson) => {
       // Конвертируем geojson в слой leaflet
@@ -143,12 +132,27 @@ function MapDesigner({
           if (feature.properties.text) {
             layer.bindTooltip(feature.properties.text, tooltipOptions);
           }
-          layer.setStyle(feature.properties);
+          //layer.setStyle(feature.properties);
           FG.current.leafletElement.addLayer(layer);
         },
       });
     });
-  };
+  }, [handleSelected, state.features]);
+
+  // Сохраняем данные после каждого изменения состояния
+  useEffect(() => {
+    if (state.features) {
+      saveData(state);
+      whenReady();
+    }
+  }, [saveData, state, whenReady]);
+
+  // Обновляем состояние после каждого изменения пропса
+  useEffect(() => {
+    if (data.features) {
+      setState(data);
+    }
+  }, [data]);
 
   return (
     <div className="rrbe-map">
