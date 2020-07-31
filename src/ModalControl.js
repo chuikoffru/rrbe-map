@@ -172,16 +172,18 @@ const ModalControl = ({ selected, state, open, onClose, setState, fg }) => {
           </div>
         )}
         {properties.fillOpacity && (
-          <div className="modal__body-color">
-            <label>Прозрачность заливки</label>
-            <input
-              type="range"
-              min="0.1"
-              step="0.1"
-              max="1.0"
-              value={properties.fillOpacity}
-              onChange={handleFillOpacity}
-            />
+          <div className="modal__body-text">
+            <label>
+              Прозрачность заливки
+              <input
+                type="range"
+                min="0.1"
+                step="0.1"
+                max="1.0"
+                value={properties.fillOpacity}
+                onChange={handleFillOpacity}
+              />
+            </label>
           </div>
         )}
         {properties.icon && (
