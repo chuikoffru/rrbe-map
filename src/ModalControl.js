@@ -48,8 +48,8 @@ const ModalControl = ({ selected, state, open, onClose, setState, fg }) => {
     onClose();
   };
 
-  //Меняем цвет
-  const handleColor = (hex) => {
+  //Меняем цвет заливки
+  const handleFillColor = (hex) => {
     setProperties({ ...properties, fillColor: hex });
     const layer = getLayer();
     if (layer instanceof L.Marker) {
@@ -59,19 +59,50 @@ const ModalControl = ({ selected, state, open, onClose, setState, fg }) => {
     }
   };
 
+  //Меняем цвет границы
+  const handleColor = (hex) => {
+    setProperties({ ...properties, color: hex });
+    const layer = getLayer();
+    if (layer instanceof L.Marker) {
+      layer.setIcon(customIcon(properties.icon, hex));
+    } else {
+      layer.setStyle({ color: hex });
+    }
+  };
+
   const handleIcon = (name) => {
     setProperties({ ...properties, icon: name });
     const layer = getLayer();
     layer.setIcon(customIcon(name, properties.fillColor));
   };
 
-  const handleText = (event) => {
-    setProperties({ ...properties, text: event.target.value });
+  const handleTooltip = (event) => {
+    setProperties({ ...properties, tooltip: event.target.value });
     const layer = getLayer();
     if (layer.getTooltip()) {
       layer.setTooltipContent(event.target.value);
     } else {
       layer.bindTooltip(event.target.value, tooltipOptions);
+    }
+  };
+
+  const handlePopup = (event) => {
+    setProperties({ ...properties, popup: event.target.value });
+    const layer = getLayer();
+    if (layer.getTooltip()) {
+      layer.setPopupContent(event.target.value);
+    } else {
+      layer.bindPopup(event.target.value);
+    }
+  };
+
+  const handleFillOpacity = (event) => {
+    setProperties({ ...properties, fillOpacity: event.target.value });
+    const layer = getLayer();
+    if (layer instanceof L.Marker) {
+      layer.setOpacity(event.target.value);
+    } else {
+      layer.setStyle({ fillOpacity: event.target.value });
     }
   };
 
@@ -90,7 +121,7 @@ const ModalControl = ({ selected, state, open, onClose, setState, fg }) => {
   };
 
   return (
-    <div className="rrbe_map__modal modal">
+    <div className="rrbe-map__modal modal">
       <div className={!open ? "modal__body" : "modal__body open"}>
         <button type="button" className="close" onClick={onClose}>
           X
@@ -98,12 +129,19 @@ const ModalControl = ({ selected, state, open, onClose, setState, fg }) => {
         <h3>Настройки</h3>
         <div className="modal__body-text">
           <label>
-            Всплывающая подсказка
-            <textarea value={properties.text} onChange={handleText} />
+            Подпись
+            <input type="text" value={properties.tooltip} onChange={handleTooltip} />
+          </label>
+        </div>
+        <div className="modal__body-text">
+          <label>
+            Всплывающее сообщение
+            <textarea value={properties.popup} onChange={handlePopup} />
           </label>
         </div>
         {properties.fillColor && (
           <div className="modal__body-color">
+            <label>Цвет заливки</label>
             {colors.map((item, key) => (
               <button
                 key={key}
@@ -112,9 +150,38 @@ const ModalControl = ({ selected, state, open, onClose, setState, fg }) => {
                   backgroundColor: item,
                 }}
                 className={`color ${item === properties.fillColor ? "active" : ""}`}
+                onClick={() => handleFillColor(item)}
+              />
+            ))}
+          </div>
+        )}
+        {properties.color && (
+          <div className="modal__body-color">
+            <label>Цвет границы</label>
+            {colors.map((item, key) => (
+              <button
+                key={key}
+                type="button"
+                style={{
+                  backgroundColor: item,
+                }}
+                className={`color ${item === properties.color ? "active" : ""}`}
                 onClick={() => handleColor(item)}
               />
             ))}
+          </div>
+        )}
+        {properties.fillOpacity && (
+          <div className="modal__body-color">
+            <label>Прозрачность заливки</label>
+            <input
+              type="range"
+              min="0.1"
+              step="0.1"
+              max="1.0"
+              value={properties.fillOpacity}
+              onChange={handleFillOpacity}
+            />
           </div>
         )}
         {properties.icon && (

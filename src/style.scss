@@ -1,7 +1,7 @@
-.rrbe_map {
+.rrbe-map {
   position: relative;
   width: 100%;
-  height: 100vh;
+  height: calc(100vh - 20px);
 
   &__preloader {
     position: absolute;
@@ -71,12 +71,18 @@
           border: 0;
         }
         &-color {
+          label {
+            color: #919191;
+            display: flex;
+            flex-direction: column;
+            font-size: 0.9rem;
+          }
           button {
             border: 0;
             width: 30px;
             height: 30px;
             background: none;
-            margin: 10px 10px 10px 0;
+            margin: 10px 10px 20px 0;
             cursor: pointer;
             &.active {
               background-image: url("./assets/correct.png");
@@ -87,15 +93,20 @@
         }
         &-text {
           label {
-            color: #6c757d;
+            color: #919191;
             display: flex;
             flex-direction: column;
-            textarea {
-              margin: 10px 0;
+            font-size: 0.9rem;
+            textarea,
+            input {
+              margin: 10px 0 20px;
+              padding: 5px;
+              border: 1px solid #919191;
             }
           }
         }
         &-icon {
+          margin: 10px 0 20px;
           button {
             background-color: #fff;
             border: 0;
@@ -114,7 +125,7 @@
           background-color: #6c757d;
           padding: 10px 15px;
           color: #fff;
-          margin: 15px 0;
+          //margin: 15px 0;
           &:hover {
             background-color: #343a40;
           }

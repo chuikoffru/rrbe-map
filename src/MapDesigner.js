@@ -14,11 +14,11 @@ import tooltipOptions from "./helpers/tooltipOptions";
 import ModalControl from "./ModalControl";
 import Loader from "./Loader";
 
-import { ReactComponent as PaintIcon } from "./assets/paint.svg";
+import MemoPaintIcon from "./Icons/PaintIcon";
 
+import "./style.scss";
 import "leaflet/dist/leaflet.css";
 import "leaflet-draw/dist/leaflet.draw.css";
-import "./style.scss";
 
 function noob() {}
 
@@ -29,6 +29,7 @@ function MapDesigner({
   data,
   isEditable = false,
   isLoading = false,
+  isTransformLatLng = false,
   saveData = noob,
   onTap = noob,
 }) {
@@ -50,25 +51,39 @@ function MapDesigner({
       let geojson = layer.toGeoJSON();
       // Задаем ID
       geojson.id = id;
-      geojson.properties.text = geojson.properties.text ? geojson.properties.text : "";
+      geojson.properties.tooltip = geojson.properties.tooltip ? geojson.properties.tooltip : "";
+      geojson.properties.popup = geojson.properties.popup ? geojson.properties.popup : "";
+      // Назначаем цвет заливки
+      geojson.properties.fillColor = geojson.properties.fillColor
+        ? geojson.properties.fillColor
+        : "#3388ff";
+      // Назначаем прозрачность заливки
+      geojson.properties.fillOpacity = geojson.properties.fillOpacity
+        ? geojson.properties.fillOpacity
+        : 0.5;
       // Задаем опции
       if (layer instanceof L.Circle) {
+        // Цвет бордера
+        geojson.properties.color = geojson.properties.color ? geojson.properties.color : "#3388ff";
         geojson.properties.radius = layer.getRadius();
-        geojson.properties.fillColor = layer.options.fillColor;
       } else if (layer instanceof L.Polygon) {
-        geojson.properties.fillColor = layer.options.fillColor;
+        // Цвет бордера
+        geojson.properties.color = geojson.properties.color ? geojson.properties.color : "#3388ff";
+        // Polygon style properties
       } else if (layer instanceof L.Marker) {
-        geojson.properties.fillColor = geojson.properties.fillColor
-          ? geojson.properties.fillColor
-          : "#3388ff";
+        console.log("geojson.properties", geojson.properties);
+        geojson.properties.icon = geojson.properties.opacity ? geojson.properties.opacity : 1.0;
         geojson.properties.icon = geojson.properties.icon ? geojson.properties.icon : "Marker";
-        layer.setIcon(customIcon(geojson.properties.icon, geojson.properties.fillColor));
+        layer.setIcon(customIcon(geojson.properties.icon));
       }
-
-      if (geojson.properties.text) {
-        layer.bindTooltip(geojson.properties.text, tooltipOptions);
+      // Назначаем подпись
+      if (geojson.properties.tooltip) {
+        layer.bindTooltip(geojson.properties.tooltip, tooltipOptions);
       }
-
+      // Назначаем всплывающие подсказки
+      if (geojson.properties.popup) {
+        layer.bindPopup(geojson.properties.popup);
+      }
       // Добавляем в массив
       features.push(geojson);
     });
@@ -105,43 +120,49 @@ function MapDesigner({
     // Очищаем старые слои
     FG.current.leafletElement.clearLayers();
     // Добавляем новые слои
-    state.features.forEach((geojson) => {
-      // Конвертируем geojson в слой leaflet
-      L.geoJSON(geojson, {
-        coordsToLatLng: (coords) => {
-          return coords;
-        },
-        pointToLayer: (geojson, latlng) => {
-          // Создаем точные типы слоев
-          if (isCircle(geojson)) {
-            let circle = L.circle(latlng, geojson.properties);
-            return circle;
-          } else if (isMarker(geojson)) {
-            let marker = L.marker(latlng, geojson.properties);
-            return marker;
-          } else if (isPolygon(geojson)) {
-            let polygon = L.polygon(latlng, geojson.properties);
-            return polygon;
-          }
-        },
-        onEachFeature: (feature, layer) => {
-          layer.addEventListener("click", handleSelected);
-          if (layer instanceof L.Marker) {
-            layer.setIcon(customIcon(feature.properties.icon, feature.properties.fillColor));
-          }
-          if (feature.properties.text) {
-            layer.bindTooltip(feature.properties.text, tooltipOptions);
-          }
-          //layer.setStyle(feature.properties);
-          FG.current.leafletElement.addLayer(layer);
-        },
+    state &&
+      state.features.forEach((geojson) => {
+        // Конвертируем geojson в слой leaflet
+        L.geoJSON(geojson, {
+          coordsToLatLng: (coords) => {
+            return !isTransformLatLng ? L.latLng([coords[1], coords[0]]) : coords;
+          },
+          pointToLayer: (geojson, latlng) => {
+            // Создаем точные типы слоев
+            if (isCircle(geojson)) {
+              let circle = L.circle(latlng, geojson.properties);
+              return circle;
+            } else if (isMarker(geojson)) {
+              let marker = L.marker(latlng, geojson.properties);
+              return marker;
+            } else if (isPolygon(geojson)) {
+              let polygon = L.polygon(latlng, geojson.properties);
+              return polygon;
+            }
+          },
+          onEachFeature: (feature, layer) => {
+            layer.addEventListener("click", handleSelected);
+            if (layer instanceof L.Marker) {
+              layer.setIcon(customIcon(feature.properties.icon, feature.properties.fillColor));
+              layer.setOpacity(feature.properties.fillOpacity);
+            } else {
+              layer.setStyle(feature.properties);
+            }
+            if (feature.properties.tooltip) {
+              layer.bindTooltip(feature.properties.tooltip, tooltipOptions);
+            }
+            if (feature.properties.popup) {
+              layer.bindPopup(feature.properties.popup);
+            }
+            FG.current.leafletElement.addLayer(layer);
+          },
+        });
       });
-    });
-  }, [handleSelected, state.features]);
+  }, [handleSelected, isTransformLatLng, state]);
 
   // Сохраняем данные после каждого изменения состояния
   useEffect(() => {
-    if (state.features) {
+    if (state && state.features) {
       saveData(state);
       whenReady();
     }
@@ -149,7 +170,7 @@ function MapDesigner({
 
   // Обновляем состояние после каждого изменения пропса
   useEffect(() => {
-    if (data.features) {
+    if (data && data.features) {
       setState(data);
     }
   }, [data]);
@@ -185,9 +206,9 @@ function MapDesigner({
           />
         </FeatureGroup>
         {isEditable && selected && (
-          <Control position="topleft" className="rrbe_map__paint">
+          <Control position="topleft" className="rrbe-map__paint">
             <button type="button" onClick={() => setOpen(!open)}>
-              <PaintIcon width="15" height="15" fill="#464646" />
+              <MemoPaintIcon width="15" height="15" fill="#464646" />
             </button>
           </Control>
         )}
