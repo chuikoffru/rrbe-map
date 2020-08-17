@@ -184,7 +184,10 @@ function MapDesigner({
         className={`rrbe-map__container ${className}`}
         whenReady={whenReady}
       >
-        <TileLayer url="http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        <TileLayer
+          url="http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution={"MapDesigner"}
+        />
         <FeatureGroup ref={FG}>
           <EditControl
             position="topleft"
