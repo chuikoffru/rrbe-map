@@ -120,7 +120,7 @@ function MapDesigner({
     // Очищаем старые слои
     FG.current.leafletElement.clearLayers();
     // Добавляем новые слои
-    state &&
+    state.length > 0 &&
       state.features.forEach((geojson) => {
         // Конвертируем geojson в слой leaflet
         L.geoJSON(geojson, {
